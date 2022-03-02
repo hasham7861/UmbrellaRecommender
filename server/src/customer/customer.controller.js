@@ -1,6 +1,8 @@
-const { validationResult } = require("express-validator");
-const customerSchema = require("./customer.schema");
-
+const { validationResult } = require("express-validator")
+const customerSchema = require("./customer.schema")
+const fetch = require('node-fetch')
+const config = require('../config/app.local.config')
+const util = require('util')
 module.exports = class CustomerController {
 
     static createCustomer(request, response) {
@@ -66,7 +68,19 @@ module.exports = class CustomerController {
 
     static getCustomersWhoHaveRainAndNoRainGivenDays(request, response) {
         // TODO: from all the customers in database, use their location to get only 4 customers who have top employee companies who have rain and no rain
-        response.send("test message")
+        const routeStringWithDynamicLatAndLon = util.format(config.externalApi.openWeather.uri,"51.5085","-0.1257");
+
+        fetch(routeStringWithDynamicLatAndLon).then(async data=>{
+           const resp= await data.text()
+           const jsonResp = JSON.parse(resp)
+           response.send(jsonResp)
+        }
+            
+            ).catch(err=>{
+            if(err){
+                return response.status(400).send({message: "failed to make call to openweather", errors: err})
+            }
+        })
     }
 
 }
