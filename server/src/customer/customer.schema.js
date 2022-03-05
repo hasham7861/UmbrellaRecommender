@@ -4,7 +4,7 @@ const customerSchema = new mongoose.Schema({
     name: String,
     personOfContact: String,
     telephoneNumber: String,
-    location: {lat: String, lon: String},
+    city: String,
     numberOfEmployees: Number
 })
 

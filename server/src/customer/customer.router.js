@@ -8,7 +8,7 @@ const validator = (routeName) =>{
             return [
                 body('name', 'name is missing').exists(),
                 body("personOfContact", 'personOfContact is missing').exists(),
-                body('location', 'location is missing').exists(),
+                body('city', 'city is missing').exists(),
                 body("telephoneNumber", 'telephoneNumber is missing').exists(),
                 body("numberOfEmployees", 'numberOfEmployees is missing').exists()
             ]
