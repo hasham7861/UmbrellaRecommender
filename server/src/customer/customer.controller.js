@@ -116,13 +116,13 @@ module.exports = class CustomerController {
 
         async function getGeoCoordinatesBasedOnCityName(cityName) {
             const strParams = 'geo/1.0/direct?q=%s&limit=1&appId=%s';
-            const cityCoordindatesRequestUrl = util.format(
+            const cityCoordinatesRequestUrl = util.format(
                 config.externalApi.openWeather.uri + strParams, cityName, config.externalApi.openWeather.appId);
 
             let coordinates;
 
             try{
-                const data = await fetch(cityCoordindatesRequestUrl)
+                const data = await fetch(cityCoordinatesRequestUrl)
                 const resp = await data.text()
                 const jsonResp = JSON.parse(resp)
                 const { lat, lon } = _.get(jsonResp,'0',{})
