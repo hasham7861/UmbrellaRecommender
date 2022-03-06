@@ -108,14 +108,14 @@ module.exports = class CustomerController {
                 shouldRecommendUmbrella = isRainingOnAllNext5Days(filteredResp)
             } catch (error){
                 shouldRecommendUmbrella = false;
-                console.error('cant get should recommend umbrella flag')
+                console.error('cant get should recommend umbrella flag for city:' + cityName)
             }
 
             return shouldRecommendUmbrella;
         }
 
         async function getGeoCoordinatesBasedOnCityName(cityName) {
-            const strParams = 'geo/1.0/direct?q=%s&limit=1&appId=%s';
+            const strParams = 'geo/1.0/direct?q=`%s`&limit=1&appId=%s';
             const cityCoordinatesRequestUrl = util.format(
                 config.externalApi.openWeather.uri + strParams, cityName, config.externalApi.openWeather.appId);
 
@@ -140,24 +140,29 @@ module.exports = class CustomerController {
 
         function filterRespWithWeatherAndTime(resp) {
             return resp.list.map(element => {
+                const weather = element.weather[0].main;
+                const date = new Date(element.dt_txt)
+                const dateStr = date.getDate() + "/" + (date.getMonth() + 1) +"/" + date.getFullYear()
                 return {
-                    weather: element.weather[0].main,
-                    date: element.dt_txt
+                  weather, date: dateStr
                 }
             })
         }
 
         function isRainingOnAllNext5Days(resp) {
-            const rainCheckSet = new Set();
+            const rainCheckMap = new Map();
 
-            return resp.every(element => {
-                if (rainCheckSet.has(element.date) === false) {
-                    if (element.weather === "Rain") {
-                        setAlreadyCheckedDate.add(element.date)
-                        return true;
-                    }
+            resp.forEach(element=>{
+                if(!rainCheckMap[element.date] && element.weather === "Rain"){
+                    rainCheckMap[element.date] = true;
                 }
             })
+
+            
+            const answer =  Object.entries(rainCheckMap).every((item)=> item[1] === true)
+                 && Object.entries(rainCheckMap).length >= 5;
+        
+            return answer;
         }
     }
 }

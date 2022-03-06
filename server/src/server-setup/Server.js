@@ -1,7 +1,8 @@
 const express = require('express');
 const { listeningPort } = require('../config/app.local.config');
 const customerRouter = require('../customer/customer.router');
-
+const getCorsConfig = require('./Cors');
+const getPayloadConfig = require('./PayloadConfig');
 const MongoClient = require('./MongoDb');
 
 module.exports = class Server {
@@ -11,9 +12,10 @@ module.exports = class Server {
     static _create(){
         if(this._instance === null){
             this._instance = express();
-            this._instance.use(express.urlencoded({extended: true}));
-            this._instance.use(express.json()) 
+            this._instance.use(getPayloadConfig());
+            this._instance.use(getCorsConfig())
         }
+
 
         return this._instance;
     }
