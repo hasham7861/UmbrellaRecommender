@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:4.2.8
+    ports:
+      - 27017:27017
+  
+  api:
+    build:
+      context: ./server
+      dockerfile: local.app.Dockerfile
+    command: npm run start
+    volumes:
+      - .:/usr/api/
+      - /usr/api/node_modules
+    ports:
+      - "5000:5000"
+    links:
+      - mongo
+  
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: local.app.Dockerfile
+    command: npm run start
+    volumes:
+      - .:/usr/frontend
+      - /usr/api/node_modules
+    ports:
+      - "3000:3000"
+    links:
+      - api

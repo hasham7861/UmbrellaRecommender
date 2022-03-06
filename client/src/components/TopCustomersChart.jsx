@@ -52,7 +52,6 @@ export function TopCustomersChart() {
             
             const labels = jsonData.map(element=>element.name)
             const dataSet = jsonData.map(element=>element.numberOfEmployees) 
-            console.log(labels, dataSet)
 
             setChartData(
                 {
