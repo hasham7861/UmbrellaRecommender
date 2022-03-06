@@ -2,7 +2,7 @@ This is a simple umbrella recommender CRM
 
 
 ### Tech Stack
-- React, Node, Docker, Mongo
+- React, Express(Node), Docker, Mongo
 
 ## To run the app
 - Make sure you have docker daemon running in background
