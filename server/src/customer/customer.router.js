@@ -29,6 +29,8 @@ module.exports = function(serverInstance){
 
     serverInstance.get("/customer/top", CustomerController.getCustomersWhoHaveRainAndNoRainGivenDays)
 
+    serverInstance.get("/customer/all", CustomerController.getAll)
+    
     serverInstance.post("/customer/create", validator('createCustomer'), CustomerController.createCustomer)
 
     serverInstance.put("/customer/update", validator('updateCustomer'), CustomerController.updateCustomer)

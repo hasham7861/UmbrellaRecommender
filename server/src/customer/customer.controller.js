@@ -70,10 +70,20 @@ module.exports = class CustomerController {
     static async getCustomersWhoHaveRainAndNoRainGivenDays(request, response) {
 
         const customers = await customerSchema.find({})
-        
-        const top4Customers = get4CustomersWithHighestEmployeeCount(customers);
+        const willTheseCustomersFaceRain = await CustomerController.getCustomersWithRainStatus(customers)
+        const top4Customers = get4CustomersWithHighestEmployeeCount(willTheseCustomersFaceRain)
+        return response.send(top4Customers)
 
-        const willTheseCustomersFaceRain = await Promise.all(top4Customers.map(
+        function get4CustomersWithHighestEmployeeCount(customers){
+            const sortedByTopEmployeeCount = customers.sort((a,b)=>b.numberOfEmployees - a.numberOfEmployees)
+            const filteredOutNoRainCustomers = sortedByTopEmployeeCount.filter((customer)=>customer.shouldRecommendUmbrella === true)
+            return filteredOutNoRainCustomers.slice(0,4)
+        }
+
+    }
+
+    static async getCustomersWithRainStatus (customers){
+        const willTheseCustomersFaceRain = await Promise.all(customers.map(
             async customer=>{
                 return {
                     name: customer.name,
@@ -83,16 +93,16 @@ module.exports = class CustomerController {
             }
         ))
 
-        return response.send(willTheseCustomersFaceRain)
-
-        function get4CustomersWithHighestEmployeeCount(customers){
-            const sortedByTopEmployeeCount = customers.sort((a,b)=>b.numberOfEmployees - a.numberOfEmployees)
-            return sortedByTopEmployeeCount.slice(0,4)
-        }
+        return willTheseCustomersFaceRain
 
         async function shouldRecommendUmbrella(cityName){
 
             const {lat, lon} = await getGeoCoordinatesBasedOnCityName(cityName)
+
+            if(!lat && !lon){
+                // console.error({message: "coordinates for city can't be retrieve"})
+                return false;
+            }
 
             const strParams = 'data/2.5/forecast?lat=%s&lon=%s&units=%s&appId=%s';
             const routeStringWithDynamicLatAndLon = util.format(
@@ -108,7 +118,7 @@ module.exports = class CustomerController {
                 shouldRecommendUmbrella = isRainingOnAllNext5Days(filteredResp)
             } catch (error){
                 shouldRecommendUmbrella = false;
-                console.error('cant get should recommend umbrella flag for city:' + cityName)
+                console.error({message:'weather api error', error: error} )
             }
 
             return shouldRecommendUmbrella;
@@ -119,19 +129,23 @@ module.exports = class CustomerController {
             const cityCoordinatesRequestUrl = util.format(
                 config.externalApi.openWeather.uri + strParams, cityName, config.externalApi.openWeather.appId);
 
-            let coordinates;
+            let coordinates = {};
 
             try{
                 const data = await fetch(cityCoordinatesRequestUrl)
                 const resp = await data.text()
                 const jsonResp = JSON.parse(resp)
+                if(!_.isNil(jsonResp.cod)){
+                    console.error({message:'weather api error', error: jsonResp.message})
+                    return coordinates;
+                }
                 const { lat, lon } = _.get(jsonResp,'0',{})
                 coordinates = {
                     lat,
                     lon
                 }
             } catch (error){
-                console.error('CUSTOMER_ERROR: cant get coordinates for city')
+                console.error({message:'weather api error', error:JSON.stringify(error.message)} )
             }
          
             return coordinates;
@@ -164,5 +178,17 @@ module.exports = class CustomerController {
         
             return answer;
         }
+
+    }
+
+    static async getAll(request, response){
+        const customers = await customerSchema.find({})
+        const willTheseCustomersFaceRain = await CustomerController.getCustomersWithRainStatus(customers)
+        const customersWithFilteredData = customers.map(customer=>{
+            customer.shouldRecommendUmbrella = _.get(willTheseCustomersFaceRain.find(element => element.name === customer.name),'shouldRecommendUmbrella',false)
+            customer.__v = undefined
+            return customer
+        })
+        response.send(customersWithFilteredData) 
     }
 }

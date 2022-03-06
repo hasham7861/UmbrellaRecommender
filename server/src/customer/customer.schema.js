@@ -5,7 +5,8 @@ const customerSchema = new mongoose.Schema({
     personOfContact: String,
     telephoneNumber: String,
     city: String,
-    numberOfEmployees: Number
+    numberOfEmployees: Number,
+    shouldRecommendUmbrella: Boolean
 })
 
 module.exports = mongoose.model("customer", customerSchema)
